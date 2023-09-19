@@ -2,8 +2,6 @@
 """ Console Module """
 import cmd
 import sys
-import re
-import shlex
 from models.base_model import BaseModel
 from models.__init__ import storage
 from models.user import User
@@ -118,41 +116,40 @@ class HBNBCommand(cmd.Cmd):
         """ Overrides the emptyline method of CMD """
         pass
 
-    def value_parser(self, args):
-        """creates a dictionary"""
-        n_dict = {}
-        for arg in args:
-            if "=" in arg:
-                kvp = arg.split('=', 1)
-                ky = kvp[0]
-                v = kvp[1]
-                if v[0] == v[-1] == '"':
-                    v = shlex.split(v)[0].replace('_', ' ')
-                else:
-                    try:
-                        v = int(v)
-                    except:
-                        try:
-                            v = float(v)
-                        except:
-                            continue
-                n_dict[ky] = v
-        return n_dict
+    def value_parser(self, val):
+        """Cast string to float or int """
+        if len(val) >= 2 and val[0] == '"' and val[-1] == '"':
+            val = val[1:-1].replace("_", " ")
+        else:
+            try:
+                val = float(val) if "." in val else int(val)
+            except ValueError:
+                return None
 
-    def do_create(self, arg):
+        return val
+
+    def do_create(self, args):
         """ Create an object of any class"""
-        args_arr = arg.split()
-        if len(args_arr == 0):
+        if not args:
             print("** class name missing **")
             return
-        if args_arr[0] in classes:
-            n_dict = self.value_parser(arg[1:])
-            instance = classes[args_arr[0]](**n_dict)
-        else:
+
+        args_ar = args.split()
+        clase = args_ar[0]
+
+        if clase not in HBNBCommand.classes:
             print("** class doesn't exist **")
-            return
-        print(instance.id)
-        instance.save()
+        return
+    new_instance = HBNBCommand.classes[clase]()
+    for param in args_array[1:]:
+        key, value = param.split("=")
+        if key in HBNBCommand.valid_keys[clase]:
+            value_parser = self.value_parser(value)
+            if value_parser is not None:
+                setattr(new_instance, key, value_parser)
+
+    new_instance.save()
+    print(new_instance.id)
 
     def help_create(self):
         """ Help information for the create method """
