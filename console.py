@@ -119,47 +119,40 @@ class HBNBCommand(cmd.Cmd):
         pass
 
     def value_parser(self, args):
-        """Creates a dictionary from a list of strings."""
-        new_dict = {}
+        """creates a dictionary"""
+        n_dict = {}
         for arg in args:
-            parts = arg.split('=')
-            if len(parts) == 2:
-                key, value = parts
-                if value.startswith('"') and value.endswith('"'):
-                    value = value[1:-1].replace('_', ' ')
-                elif '.' in value:
-                    try:
-                        value = float(value)
-                    except ValueError:
-                        continue
+            if "=" in arg:
+                kvp = arg.split('=', 1)
+                ky = kvp[0]
+                v = kvp[1]
+                if v[0] == v[-1] == '"':
+                    v = shlex.split(v)[0].replace('_', ' ')
                 else:
                     try:
-                        value = int(value)
-                    except ValueError:
-                        continue
-                new_dict[key] = value
-        return new_dict
+                        v = int(v)
+                    except:
+                        try:
+                            v = float(v)
+                        except:
+                            continue
+                n_dict[ky] = v
+        return n_dict
 
     def do_create(self, arg):
-        """Creates a new instance of a class"""
-        args = arg.split()
-        if not args:
+        """ Create an object of any class"""
+        args_arr = arg.split()
+        if len(args_arr == 0):
             print("** class name missing **")
-            return False
-
-        class_name = args[0]
-        if class_name not in classes:
+            return
+        if args_arr[0] in classes:
+            n_dict = self.value_parser(arg[1:])
+            instance = classes[args_arr[0]](**n_dict)
+        else:
             print("** class doesn't exist **")
-            return False
-
-        param_string = ' '.join(args[1:])
-        param_pattern = r'([^=]+="[^"]+"|[^=]+=[\d.]+|[^=]+=\d+)'
-        params = re.findall(param_pattern, param_string)
-
-        param_dict = self.value_parser(params)
-        instance = classes[class_name](**param_dict)
-        instance.save()
+            return
         print(instance.id)
+        instance.save()
 
     def help_create(self):
         """ Help information for the create method """
