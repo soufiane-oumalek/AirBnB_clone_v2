@@ -2,6 +2,8 @@
 """ Console Module """
 import cmd
 import sys
+import re
+import shlex
 from models.base_model import BaseModel
 from models.__init__ import storage
 from models.user import User
@@ -11,8 +13,7 @@ from models.city import City
 from models.amenity import Amenity
 from models.review import Review
 
-
-places = {"Amenity": Amenity, "BaseModel": BaseModel, "City": City,
+classes = {"Amenity": Amenity, "BaseModel": BaseModel, "City": City,
            "Place": Place, "Review": Review, "State": State, "User": User}
 
 
@@ -77,7 +78,7 @@ class HBNBCommand(cmd.Cmd):
                 pline = pline[2].strip()  # pline is now str
                 if pline:
                     # check for *args or **kwargs
-                    if pline[0] is '{' and pline[-1] is'}'\
+                    if pline[0] is '{' and pline[-1] is '}'\
                             and type(eval(pline)) is dict:
                         _args = pline
                     else:
@@ -117,20 +118,48 @@ class HBNBCommand(cmd.Cmd):
         """ Overrides the emptyline method of CMD """
         pass
 
+    def value_parser(self, args):
+        """Creates a dictionary from a list of strings."""
+        new_dict = {}
+        for arg in args:
+            parts = arg.split('=')
+            if len(parts) == 2:
+                key, value = parts
+                if value.startswith('"') and value.endswith('"'):
+                    value = value[1:-1].replace('_', ' ')
+                elif '.' in value:
+                    try:
+                        value = float(value)
+                    except ValueError:
+                        continue
+                else:
+                    try:
+                        value = int(value)
+                    except ValueError:
+                        continue
+                new_dict[key] = value
+        return new_dict
+
     def do_create(self, arg):
-        """ Create an object of any class"""
-        args_arr = arg.split()
-        if len(args_arr == 0):
+        """Creates a new instance of a class"""
+        args = arg.split()
+        if not args:
             print("** class name missing **")
-            return
-        if args_arr[0] in places:
-            n_dict = self.value_parser(arg[1:])
-            instance = places[args_arr[0]](**n_dict)
-        else:
+            return False
+
+        class_name = args[0]
+        if class_name not in classes:
             print("** class doesn't exist **")
-            return
-        print(instance.id)
+            return False
+
+        param_string = ' '.join(args[1:])
+        param_pattern = r'([^=]+="[^"]+"|[^=]+=[\d.]+|[^=]+=\d+)'
+        params = re.findall(param_pattern, param_string)
+
+        param_dict = self.value_parser(params)
+        instance = classes[class_name](**param_dict)
         instance.save()
+        print(instance.id)
 
     def help_create(self):
         """ Help information for the create method """
@@ -326,5 +355,7 @@ class HBNBCommand(cmd.Cmd):
         print("Updates an object with new information")
         print("Usage: update <className> <id> <attName> <attVal>\n")
 
+
 if __name__ == "__main__":
+
     HBNBCommand().cmdloop()
