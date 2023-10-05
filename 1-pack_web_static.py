@@ -4,8 +4,10 @@ Fabric script to generate a .tgz archive
 Usage: fab -f 1-pack_web_static.py do_pack
 """
 
+
 from datetime import datetime
 from fabric.api import local
+
 
 def do_pack():
     """
