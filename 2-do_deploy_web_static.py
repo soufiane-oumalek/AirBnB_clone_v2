@@ -1,5 +1,8 @@
-
-m fabric.api import task, local, env, put, run
+#!/usr/bin/python3
+"""
+method doc
+"""
+from fabric.api import task, local, env, put, run
 from datetime import datetime
 import os
 
