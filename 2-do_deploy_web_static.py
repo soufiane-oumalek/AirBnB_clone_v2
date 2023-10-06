@@ -9,6 +9,22 @@ env.hosts = ['44.192.38.3', '3.239.82.120']
 env.user = "ubuntu"
 
 
+env.hosts = ['52.207.208.21', '52.206.189.175']
+
+
+@task
+def do_pack():
+	""" method doc
+	sudo fab -f 1-pack_web_static.py do_pack
+	"""
+	formatted_dt = datetime.now().strftime('%Y%m%d%H%M%S')
+	mkdir = "mkdir -p versions"
+	path = "versions/web_static_{}.tgz".format(formatted_dt)
+	print("Packing web_static to {}".format(path))
+	if local("{} && tar -cvzf {} web_static".format(mkdir, path)).succeeded:
+		return path
+	return None
+
 def do_deploy(archive_path):
     """Create a tar gzipped archive of the directory web_static."""
     if os.path.exists(archive_path) is False:
