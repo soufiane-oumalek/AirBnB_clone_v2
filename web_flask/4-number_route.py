@@ -49,6 +49,5 @@ def number(n):
     """displays 'n is a number' only if n is an integer."""
     return "{} is a number".format(n)
 
-
 if __name__ == "__main__":
     app.run(host="0.0.0.0")
